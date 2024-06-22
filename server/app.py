@@ -1,16 +1,24 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from PyPDF2 import PdfReader
+import numpy as np
+
 
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 import faiss
 import requests
+import os
 
 app = Flask(__name__)
 CORS(app)
 
 # Load and prepare data
 df = pd.read_csv('data/clean_data.csv')
+
+docs_folder = "./docs/"
+
+medicines_collection = df["NOM-titre"] 
 
 # Function to create a comprehensive text representation for each medicine
 def create_med_text(row):
@@ -106,20 +114,74 @@ def rag_query(query, top_k=5):
 
 @app.route('/chat', methods=['POST'])
 def chat():
+    if request.is_json:
+        # The received file is JSON, call the general() function
+        data = request.get_json()
+        question = data.get('question')
+
+        result = rag_query(question)
+        # Implement your chat logic here
+        # For now, we'll just echo back the question
+        res = {
+            'message': result
+        }
+
+        response = jsonify(res)
+
+    elif 'pdfFile' in request.files:  # Changed from 'pdf_file' to 'pdfFile'
+        pdf_file = request.files['pdfFile']
+        if pdf_file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+
+        pdf_filename = os.path.join(docs_folder, pdf_file.filename)
+        pdf_file.save(pdf_filename)
+
+        # return jsonify({'message': f'Successfully uploaded: {pdf_file.filename}'})
+        
+        response = jsonify({'message': pdf_chat(pdf_file)})
+
+    else:
+        return jsonify({'error': 'Unsupported file format or request.'}), 415
+
+    return response
     
-    data = request.get_json()
-    question = data.get('question')
+def pdf_chat(pdf_file):
+    # Load PDF file
+    pdf = PdfReader(pdf_file)
+    text = ""
+    for page in pdf.pages:
+        text += page.extract_text()
 
-    result = rag_query(question)
-    # Implement your chat logic here
-    # For now, we'll just echo back the question
-    response = {
-        'message': result
-    }
+    # Split text into sentences
+    sentences = text.split('.')
 
-    print(response)
 
-    return jsonify(response)
+# Prepare prompt with filtered contexts and instructions
+    prompt = f"""Context: {' '.join(sentences)}
+
+    Instructions: Answer the question truthfully based on the given context. If the context doesn't contain an answer, use your existing knowledge base. Provide a concise answer without repeating the question or mentioning the context.
+
+    Question: "Give me a summary of the provided prescription"
+
+    Answer:"""
+
+    # Query Mixtral 7B
+    response = query_mixtral(prompt)
+
+    # Extract only the answer part
+    full_response = response[0]['generated_text'].strip()
+    
+    # Find the index of "Answer:" in the response
+    answer_index = full_response.rfind("Answer:")
+    
+    if answer_index != -1:
+        # If "Answer:" is found, return everything after it
+        answer = full_response[answer_index + 7:].strip()
+    else:
+        # If "Answer:" is not found, return the full response
+        answer = full_response
+
+    return answer
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000)
