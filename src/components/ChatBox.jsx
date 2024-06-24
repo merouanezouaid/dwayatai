@@ -96,27 +96,36 @@ function ChatBox({ conversation, setConversation, formatTime }) {
         if (file && file.type === 'application/pdf' && file.size <= 1024000) {
             const formData = new FormData();
             formData.append('pdfFile', file);
-
+    
             fetch('http://127.0.0.1:5000/chat', {
                 method: 'POST',
-                body: formData,
+                body: formData
             })
-                .then((response) => response.json())
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then((data) => {
                     console.log(data);
-                    setConversation([
-                        ...conversation,
-                        { text: `Uploaded PDF: 📄${file.name}`, type: 'You', time: formatTime() }
+                    setConversation(prevConversation => [
+                        ...prevConversation,
+                        { text: `Uploaded PDF: 📄${file.name}`, type: 'You', time: formatTime() },
+                        { text: data.message, type: 'Bot', time: formatTime() }
                     ]);
                 })
                 .catch((error) => {
                     console.error('Error uploading PDF:', error);
+                    setConversation(prevConversation => [
+                        ...prevConversation,
+                        { text: `Error uploading PDF: ${error.message}`, type: 'Error', time: formatTime() }
+                    ]);
                 });
         } else {
             console.error('Invalid PDF file format or size exceeds 1MB');
         }
     };
-
     
         return (
             <div className="chat-box">

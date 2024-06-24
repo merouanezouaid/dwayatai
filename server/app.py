@@ -161,7 +161,7 @@ def pdf_chat(pdf_file):
 
     Instructions: Answer the question truthfully based on the given context. If the context doesn't contain an answer, use your existing knowledge base. Provide a concise answer without repeating the question or mentioning the context.
 
-    Question: "Give me a summary of the provided prescription"
+    Question: "Give me a summary of the provided prescription, and how should i take the medecines?"
 
     Answer:"""
 
