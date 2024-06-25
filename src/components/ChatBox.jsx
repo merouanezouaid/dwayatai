@@ -188,12 +188,6 @@ function ChatBox({ conversation, setConversation, formatTime }) {
                         _focus={{ outline: "none" }}
                     />
                     <button
-                        id='mic-input' 
-                        className='sc-btn'
-                    >
-                        🎙️
-                    </button>
-                    <button
                         onClick={handleSubmitQuestion}
                         disabled={isLoading}
                         size="sm"

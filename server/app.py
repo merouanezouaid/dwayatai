@@ -122,6 +122,9 @@ def chat():
         result = rag_query(question)
         # Implement your chat logic here
         # For now, we'll just echo back the question
+
+        result = darija(result)
+        
         res = {
             'message': result
         }
@@ -182,6 +185,22 @@ def pdf_chat(pdf_file):
         answer = full_response
 
     return answer
+
+
+
+def darija(text):
+    API_URL = "https://api-inference.huggingface.co/models/atlasia/Terjman-Large-v2"
+    headers = {"Authorization": "Bearer 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"}
+
+    def query(payload):
+        response = requests.post(API_URL, headers=headers, json=payload)
+        return response.json()
+        
+    output = query({
+        "inputs": text,
+    })
+
+    return output[0]['generated_text']
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000)
