@@ -12,10 +12,16 @@ function App() {
 
   const [isBoxLoading, setIsBoxLoading] = useState(true); // initially true
   const [conversation, setConversation] = useState([{
-    type: 'Bot',
+    type: 'Dwayat',
     text: 'Welcome to Dwayat AI! How can I assist you with your health today?',
     time: formatTime(new Date())
   }]);
+
+  const [selectedOption, setSelectedOption] = useState(1);
+
+  const handleSelectChange = (event) => {
+    setSelectedOption(event.target.value);
+  };
 
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
@@ -39,7 +45,7 @@ function App() {
     setTimeout(() => {
       setConversation([
         {
-          type: 'Bot',
+          type: 'Dwayat',
           text: 'Welcome to Dwayat AI! How can I assist you with your health today?',
           time: formatTime(new Date())
         }
@@ -84,6 +90,10 @@ function App() {
             </div>
           </div>
           <div>
+            <select onChange={handleSelectChange}>
+              <option value="1">BoW</option>
+              <option value="2">LLM</option>
+            </select>
             <button className='hd-btn' onClick={clearConversation}>
               <img src={clear} alt="clear" />
             </button>
@@ -101,7 +111,7 @@ function App() {
             <h3>Loading Chat...</h3>
           </div>
         ) : (
-          <ChatBox conversation={conversation} setConversation={setConversation} formatTime={formatTime} />
+          <ChatBox conversation={conversation} setConversation={setConversation} formatTime={formatTime} selectedOption={selectedOption} />
         )}
       </div>
     </div>

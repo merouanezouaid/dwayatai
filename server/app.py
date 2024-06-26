@@ -10,6 +10,9 @@ import faiss
 import requests
 import os
 
+from nlp.bot_response import bot_response
+
+
 app = Flask(__name__)
 CORS(app)
 
@@ -119,11 +122,19 @@ def chat():
         data = request.get_json()
         question = data.get('question')
 
-        result = rag_query(question)
+        option = data.get('option') 
+
+        if option == 1:
+            result = bot_response(question)
+        else:
+            result = rag_query(question)
+            if(result):
+                dja = darija(result)
+                result = result + "\n\n" + dja
+
+        #result = rag_query(question)
         # Implement your chat logic here
         # For now, we'll just echo back the question
-
-        result = darija(result)
         
         res = {
             'message': result
@@ -200,7 +211,14 @@ def darija(text):
         "inputs": text,
     })
 
-    return output[0]['generated_text']
+    print(output)
+    
+    try:
+        return output[0]['generated_text']
+    except Exception as e:
+        return "The darija model is still loading.. please try again."
+
+
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000)

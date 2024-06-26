@@ -84,12 +84,12 @@
     color: #fff;
 }
 
-.message.Bot>p {
+.message.Dwayat>p {
     background-color: #aadace;
     color: #333;
 }
 
-.message.Bot>span {
+.message.Dwayat>span {
     align-self: flex-start;
 }
 

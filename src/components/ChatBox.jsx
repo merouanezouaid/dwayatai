@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './ChatBox.css';
 import { Input } from "@chakra-ui/react";
 
-function ChatBox({ conversation, setConversation, formatTime }) {
+function ChatBox({ conversation, setConversation, formatTime, selectedOption }) {
     const [question, setQuestion] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const conversationRef = useRef();
@@ -11,9 +11,8 @@ function ChatBox({ conversation, setConversation, formatTime }) {
     const fileInputRef = useRef(null);
 
     const [placeholders, setPlaceholders] = useState([
-        "📅 Schedule an appointment",
+        "💊 Get medecine recommendations",
         "📄 Upload prescription or ask for medication help",
-        "🆘 Request emergency assistance",
         "💡 Get health tips and home remedies"
     ]);
     const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
@@ -50,12 +49,10 @@ function ChatBox({ conversation, setConversation, formatTime }) {
         ]);
         setQuestion('');
 
-        
-
         try {
             const response = await fetch('http://127.0.0.1:5000/chat', {
                 method: 'POST',
-                body: JSON.stringify({ question: curr_ques }),
+                body: JSON.stringify({ question: curr_ques, option: selectedOption}),
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -67,12 +64,12 @@ function ChatBox({ conversation, setConversation, formatTime }) {
 
                 setConversation([
                     ...conversation,
-                    { text: '⚠️ Invalid response!!', type: 'Bot', time: formatTime() },
+                    { text: '⚠️ Invalid response!!', type: 'Dwayat', time: formatTime() },
                 ]);
             } else {
                 const newMessage = {
                     text: data.message,
-                    type: 'Bot',
+                    type: 'Dwayat',
                     time: formatTime(),
                 };
 
@@ -96,6 +93,11 @@ function ChatBox({ conversation, setConversation, formatTime }) {
         if (file && file.type === 'application/pdf' && file.size <= 1024000) {
             const formData = new FormData();
             formData.append('pdfFile', file);
+
+            setConversation(prevConversation => [
+                ...prevConversation,
+                { text: `Uploaded PDF: 📄${file.name}`, type: 'You', time: formatTime() }
+            ]);
     
             fetch('http://127.0.0.1:5000/chat', {
                 method: 'POST',
@@ -111,8 +113,7 @@ function ChatBox({ conversation, setConversation, formatTime }) {
                     console.log(data);
                     setConversation(prevConversation => [
                         ...prevConversation,
-                        { text: `Uploaded PDF: 📄${file.name}`, type: 'You', time: formatTime() },
-                        { text: data.message, type: 'Bot', time: formatTime() }
+                        { text: data.message, type: 'Dwayat', time: formatTime() }
                     ]);
                 })
                 .catch((error) => {
